@@ -3,7 +3,7 @@ from dataclasses import dataclass
 @dataclass
 class Paths:
     """Configuration settings for the application."""
-    base: str = "/data-output/s3_rapa/"
+    base: str = "/home/ubuntu/git/data-output/s3_rapa/"
     demographics: str = base + "demographics/RAPA EAP Demographics Data.csv"
     alsfrsr: str = base + "demographics/RAPA EAP ALSFRS Data.csv"
     roads: str = base + "demographics/RAPA EAP ROADS Data.csv"

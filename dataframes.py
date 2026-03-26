@@ -352,18 +352,18 @@ def load_zephyrx_data(
 
     
     # Drop before pulmonologist intervention 2023-03-01
-    df_zephyrx = df_zephyrx[
-        pd.to_datetime(df_zephyrx.date) > pd.to_datetime("2023-03-01")
-    ]
-    step += 1
+    # df_zephyrx = df_zephyrx[
+    #     pd.to_datetime(df_zephyrx.date) > pd.to_datetime("2023-03-01")
+    # ]
+    # step += 1
 
-    # Drop subjects that lost more than 6 months of data after dropping before pulmonologist
-    subjects_to_drop = [
-        "1a34e374-a811-4ab6-bbce-8e71a6b1a647",
-        "2951f31f-1e6f-43bf-a7ee-960dcee7c4c6",
-    ]
-    df_zephyrx = df_zephyrx.query("user_id not in @subjects_to_drop")
-    print_data_info(f"{step} - AFTER PULMONOLOGIST (2023-03-01):", df_zephyrx)
+    # # Drop subjects that lost more than 6 months of data after dropping before pulmonologist
+    # subjects_to_drop = [
+    #     "1a34e374-a811-4ab6-bbce-8e71a6b1a647",
+    #     "2951f31f-1e6f-43bf-a7ee-960dcee7c4c6",
+    # ]
+    # df_zephyrx = df_zephyrx.query("user_id not in @subjects_to_drop")
+    # print_data_info(f"{step} - AFTER PULMONOLOGIST (2023-03-01):", df_zephyrx)
 
     # Main Filters
 
@@ -384,9 +384,10 @@ def load_zephyrx_data(
     print(
         f"--- WARNING computing 'total_timespan' for each user after usability criteria: {keep_usable_sessions_only}"
     )
+    df_zephyrx = df_zephyrx.copy()
     df_zephyrx["total_timespan"] = df_zephyrx.groupby("user_id")[
         "date"
-    ].transform(lambda x: (x.max() - x.min()).days)
+    ].transform(lambda x: (x.max() - x.min()).days).copy()
     print(
         f"--- TOTAL TIMESPAN: min {df_zephyrx.total_timespan.min()}, max {df_zephyrx.total_timespan.max()}, mean {df_zephyrx.total_timespan.mean():.2f}"
     )
@@ -403,6 +404,7 @@ def load_zephyrx_data(
     else:
         print("--- NOT FILTERING SUBJECTS BY MINIMUM MONTHS IN STUDY")
     
+    df_zephyrx = df_zephyrx.copy()
     df_zephyrx["at_least_n_usable"] = df_zephyrx.groupby(["user_id", "pftType"])[
         "eals_usability"
     ].transform("sum")
@@ -458,7 +460,7 @@ def load_aural_data(regenerate=False):
             all_files = os.listdir(config.Aural.raw + "/" + user_id + "/" + folder)
             res.append([user_id, folder, all_files, config.Aural.raw + "/" + user_id + "/" + folder])
     df_aural_folders = pd.DataFrame(res, columns=["user_id", "folder", "files", "path"])
-    
+
     # Add metadata and flags
     df_aural_folders["starts_with_date"] = df_aural_folders.folder.apply(
         lambda x: x.startswith("202")
@@ -472,16 +474,13 @@ def load_aural_data(regenerate=False):
     df_aural_folders["number_of_files"] = df_aural_folders.files.apply(lambda x: len(x))
 
     # Drop those with incomplete data
-    df_aural_folders = df_aural_folders.query(
-        "contains_json and starts_with_date and contains_wav"
-    )
+    df_aural_folders = df_aural_folders.query("contains_json and starts_with_date and contains_wav").copy()
     df_aural_folders.dropna(inplace=True)
 
     # Obtein each session's turns
     df_json_steps_meta = []
     df_aural_folders["error"] = False
     for i, row in df_aural_folders.iterrows():
-        # with open(row.path +  '/' + row.json_steps_meta_file) as f:
         try:
             with open(row.path + "/" + row.json_steps_meta_file) as f:
                 data_json_meta = json.load(f)
@@ -523,9 +522,10 @@ def load_aural_data(regenerate=False):
     # Drop users with no Wav path
     df_aural = df_aural.dropna(subset=["path"])
     df_aural.reset_index(drop=True, inplace=True)
-    print(f"Drop users with no Wav path: {df_aural.shape[0]}")
+    print(f"Drop rows with no wav path: {df_aural.shape[0]}")
 
     # Format
+    df_aural = df_aural.copy()
     df_aural["session_id"] = df_aural.apply(
         lambda row: f"{row['participantId']}__{row['date_only']}", axis=1
     )
