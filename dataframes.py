@@ -11,6 +11,9 @@ def load_alsfrsr_data():
     df_alsfrsr = pd.read_csv(config.Paths.alsfrsr, sep=';', parse_dates=["created_at"])
     df_alsfrsr["date_created_at"] = df_alsfrsr.created_at.dt.date
 
+    # Remove mislabeled rows
+    df_alsfrsr = df_alsfrsr.query('ALS_total > 0').copy()
+
     # Creation of bulbar_sub_score
     df_alsfrsr["bulbar_subscore"] = (
         df_alsfrsr["speech"] + df_alsfrsr["salvation"] + df_alsfrsr["swallowing"]
