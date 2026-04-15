@@ -6,13 +6,14 @@ import os
 import json
 import numpy as np
 
-def load_alsfrsr_data():
+def load_alsfrsr_data(clean=True):
 
     df_alsfrsr = pd.read_csv(config.Paths.alsfrsr, sep=';', parse_dates=["created_at"])
     df_alsfrsr["date_created_at"] = df_alsfrsr.created_at.dt.date
 
     # Remove mislabeled rows
-    df_alsfrsr = df_alsfrsr.query('ALS_total > 0').copy()
+    if clean:
+        df_alsfrsr = df_alsfrsr.query('ALS_total > 0').copy()
 
     # Creation of bulbar_sub_score
     df_alsfrsr["bulbar_subscore"] = (
@@ -352,23 +353,6 @@ def load_zephyrx_data(
     # Process data
     step = 1
     print_data_info(f"{step} - ORIGINAL DIMENSIONS:", df_zephyrx)
-
-    
-    # Drop before pulmonologist intervention 2023-03-01
-    # df_zephyrx = df_zephyrx[
-    #     pd.to_datetime(df_zephyrx.date) > pd.to_datetime("2023-03-01")
-    # ]
-    # step += 1
-
-    # # Drop subjects that lost more than 6 months of data after dropping before pulmonologist
-    # subjects_to_drop = [
-    #     "1a34e374-a811-4ab6-bbce-8e71a6b1a647",
-    #     "2951f31f-1e6f-43bf-a7ee-960dcee7c4c6",
-    # ]
-    # df_zephyrx = df_zephyrx.query("user_id not in @subjects_to_drop")
-    # print_data_info(f"{step} - AFTER PULMONOLOGIST (2023-03-01):", df_zephyrx)
-
-    # Main Filters
 
     # SESSION VALIDITY: Create dummy column for usability
     # Same criteria verbosed:
